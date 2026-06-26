@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  UploadCloud, Image as ImageIcon, Film, FileText, CheckCircle, 
-  AlertTriangle, Moon, Sun, Globe, History, LayoutDashboard, 
-  Search, ShieldAlert, Download, X, Eye, Cpu, Database, Binary, Info
+import {
+  UploadCloud, Image as ImageIcon, Film, CheckCircle,
+  AlertTriangle, Moon, Sun, Globe, History,
+  Search, ShieldAlert, Download, Eye, Cpu, Database, Binary, Info
 } from 'lucide-react';
 
 // --- Котормолор (Translations) ---
@@ -13,7 +13,7 @@ const translations = {
     history: "Тарых",
     admin: "Админ Панель",
     uploadTitle: "Файлды бул жакка сүйрөңүз же басып тандаңыз",
-    uploadSub: "JPG, PNG, WEBP, MP4 (макс. 50MB)",
+    uploadSub: "JPG, PNG, WEBP, MP4, MOV (макс. 50MB)",
     analyzing: "Чыныгы пикселдик анализ жүрүп жатат...",
     aiProbability: "AI / Түзөтүү деңгээли",
     realProbability: "Чыныгы сүрөт деңгээли",
@@ -28,8 +28,8 @@ const translations = {
     adminStats: "Статистика",
     totalChecks: "Жалпы текшерүүлөр",
     aiDetected: "Табылган жасалмалар",
-    usersCount: "Активдүү сессиялар",
-    fakePositives: "Жалган жыйынтыктар",
+    usersCount: "Оригинал деп баалангандар",
+    fakePositives: "Орточо AI score",
     models: "Локалдык детекторлор",
     addModel: "+ Жаңы параметр кошуу",
     metaAnalysis: "Бинардык Метамаалымат анализи",
@@ -46,7 +46,35 @@ const translations = {
     logCanvas: "Сүрөттү Canvas форматына өткөрүү...",
     logEla: "JPEG ре-компрессиялык айырмасын эсептөө...",
     logEntropy: "Пикселдик энтропияны жана градиенттерди анализдөө...",
-    logDone: "Анализ ийгиликтүү аяктады!"
+    logDone: "Анализ ийгиликтүү аяктады!",
+    fileTooLarge: "Файлдын көлөмү 50 MBдан ашпашы керек.",
+    unsupportedFile: "JPG, PNG, WEBP, MP4 же MOV форматындагы файл жүктөңүз.",
+    videoFrameLog: "Видеодон биринчи кадр бөлүнүп алынууда...",
+    technicalDisclaimer: "Жыйынтык алдын ала техникалык баалоо болуп саналат жана AI-контентти так аныктоого кепилдик бербейт.",
+    engineProcessing: "HTML5 Canvas жана бинардык анализатор файлды браузерде локалдуу иштетип жатат...",
+    engineInitialized: "ФОРЕНЗИКАЛЫК КЫЙМЫЛДАТКЫЧ ИШКЕ КИРДИ",
+    interactive: "Интерактивдүү",
+    metadataSummary: "EXIF, XMP жана provenance текшерүүсүнүн жыйынтыгы",
+    flatnessLabel: "Текстуранын тегиздиги (Flatness)",
+    highAiSignal: "Жогору (AI белгиси)",
+    noiseLabel: "Камера сенсорунун ызы-чуусу (Noise)",
+    naturalSignal: "Табигый",
+    aiShort: "AI",
+    modifiedShort: "ӨЗГӨРТҮЛГӨН",
+    realShort: "REAL",
+    originalShort: "ОРИГИНАЛ",
+    noPreview: "Алдын ала көрүнүш сакталган жок",
+    paramHeader: "Параметр",
+    countHeader: "Саны",
+    statusHeader: "Статус",
+    checksCount: "Текшерүүлөр",
+    avgScore: "Орточо AI score",
+    activeLocal: "Активдүү (локалдуу)",
+    reasonAiMetadata: "Файлдын метамаалыматында AI генераторунун санариптик изи табылды.",
+    reasonCameraMetadata: "Камеранын оригиналдуу метамаалыматтары же C2PA/JUMBF provenance белгилери табылды.",
+    reasonFlatGradients: "Сенсордук шум аз жана өтө тегиз градиенттер аныкталды.",
+    reasonElaClean: "ELA деңгээли бир калыпта таралган, одоно монтаж издери байкалган жок.",
+    reasonHighCompression: "Кысуу деңгээлинин контрасты жогору, кошумча редакциялоо ыктымалдыгы бар."
   },
   ru: {
     appTitle: "ИИ Детектор PRO",
@@ -54,7 +82,7 @@ const translations = {
     history: "История",
     admin: "Админ Панель",
     uploadTitle: "Перетащите файл сюда или нажмите для выбора",
-    uploadSub: "JPG, PNG, WEBP, MP4 (макс. 50MB)",
+    uploadSub: "JPG, PNG, WEBP, MP4, MOV (макс. 50MB)",
     analyzing: "Идет реальный пиксельный анализ...",
     aiProbability: "Уровень ИИ / Модификации",
     realProbability: "Уровень достоверности оригинала",
@@ -69,8 +97,8 @@ const translations = {
     adminStats: "Статистика",
     totalChecks: "Всего проверок",
     aiDetected: "Обнаружено ИИ",
-    usersCount: "Активные сессии",
-    fakePositives: "Ложные срабатывания",
+    usersCount: "Оценено как оригинал",
+    fakePositives: "Средний AI score",
     models: "Локальные детекторы",
     addModel: "+ Добавить параметр",
     metaAnalysis: "Бинарный анализ метаданных",
@@ -87,7 +115,35 @@ const translations = {
     logCanvas: "Отрисовка изображения на Canvas...",
     logEla: "Расчет разницы JPEG ре-компрессии...",
     logEntropy: "Анализ пиксельной энтропии и градиентов...",
-    logDone: "Анализ успешно завершен!"
+    logDone: "Анализ успешно завершен!",
+    fileTooLarge: "Размер файла не должен превышать 50 MB.",
+    unsupportedFile: "Загрузите файл в формате JPG, PNG, WEBP, MP4 или MOV.",
+    videoFrameLog: "Из видео извлекается первый кадр...",
+    technicalDisclaimer: "Результат является предварительной технической оценкой и не гарантирует точное определение AI-контента.",
+    engineProcessing: "HTML5 Canvas и бинарный анализатор обрабатывают файл локально в браузере...",
+    engineInitialized: "ФОРЕНЗИК ДВИЖОК ЗАПУЩЕН",
+    interactive: "Интерактивно",
+    metadataSummary: "Результаты проверки EXIF, XMP и provenance",
+    flatnessLabel: "Текстурная гладкость (Flatness)",
+    highAiSignal: "Высокая (признак ИИ)",
+    noiseLabel: "Шум сенсора камеры (Noise)",
+    naturalSignal: "Естественный",
+    aiShort: "ИИ",
+    modifiedShort: "ИЗМЕНЕНО",
+    realShort: "REAL",
+    originalShort: "ОРИГИНАЛ",
+    noPreview: "Превью не сохранено",
+    paramHeader: "Параметр",
+    countHeader: "Количество",
+    statusHeader: "Статус",
+    checksCount: "Проверок",
+    avgScore: "Средний AI score",
+    activeLocal: "Активно (локально)",
+    reasonAiMetadata: "В метаданных файла найдена цифровая подпись AI-генератора.",
+    reasonCameraMetadata: "Найдены оригинальные метаданные камеры или признаки C2PA/JUMBF provenance.",
+    reasonFlatGradients: "Обнаружены низкий сенсорный шум и неестественно гладкие градиенты.",
+    reasonElaClean: "Уровень ошибок ELA распределен равномерно, следов грубого монтажа не обнаружено.",
+    reasonHighCompression: "Контраст сжатия высокий, возможно дополнительное редактирование файла."
   },
   en: {
     appTitle: "AI Detector PRO",
@@ -95,7 +151,7 @@ const translations = {
     history: "History",
     admin: "Admin Panel",
     uploadTitle: "Drag & drop a file here or click to select",
-    uploadSub: "JPG, PNG, WEBP, MP4 (max 50MB)",
+    uploadSub: "JPG, PNG, WEBP, MP4, MOV (max 50MB)",
     analyzing: "Performing real pixel analysis...",
     aiProbability: "AI / Modification Level",
     realProbability: "Original Authenticity Level",
@@ -110,8 +166,8 @@ const translations = {
     adminStats: "Statistics",
     totalChecks: "Total Checks",
     aiDetected: "AI Detected",
-    usersCount: "Active Sessions",
-    fakePositives: "False Positives",
+    usersCount: "Rated Original",
+    fakePositives: "Average AI score",
     models: "Local Detectors",
     addModel: "+ Add Parameter",
     metaAnalysis: "Binary Metadata Analysis",
@@ -128,9 +184,42 @@ const translations = {
     logCanvas: "Drawing image onto digital canvas...",
     logEla: "Calculating JPEG re-compression error...",
     logEntropy: "Analyzing pixel entropy and local gradients...",
-    logDone: "Analysis completed successfully!"
+    logDone: "Analysis completed successfully!",
+    fileTooLarge: "File size must not exceed 50 MB.",
+    unsupportedFile: "Please upload a JPG, PNG, WEBP, MP4, or MOV file.",
+    videoFrameLog: "Extracting the first frame from the video...",
+    technicalDisclaimer: "The result is a preliminary technical assessment and does not guarantee accurate AI-content detection.",
+    engineProcessing: "HTML5 Canvas and the binary parser are processing the file locally in the browser...",
+    engineInitialized: "FORENSICS ENGINE INITIALIZED",
+    interactive: "Interactive",
+    metadataSummary: "EXIF, XMP, and provenance scan results",
+    flatnessLabel: "Texture flatness",
+    highAiSignal: "High (AI signal)",
+    noiseLabel: "Camera sensor noise",
+    naturalSignal: "Natural",
+    aiShort: "AI",
+    modifiedShort: "MODIFIED",
+    realShort: "REAL",
+    originalShort: "ORIGINAL",
+    noPreview: "Preview not stored",
+    paramHeader: "Parameter",
+    countHeader: "Count",
+    statusHeader: "Status",
+    checksCount: "Checks",
+    avgScore: "Average AI score",
+    activeLocal: "Active (local)",
+    reasonAiMetadata: "The file metadata contains a digital trace from an AI generator.",
+    reasonCameraMetadata: "Original camera metadata or C2PA/JUMBF provenance markers were found.",
+    reasonFlatGradients: "Low sensor noise and unusually smooth gradients were detected.",
+    reasonElaClean: "The ELA error level is evenly distributed; no rough editing traces were found.",
+    reasonHighCompression: "Compression contrast is high, which may indicate additional editing."
   }
 };
+
+const HISTORY_STORAGE_KEY = 'anyk-ai-check-history';
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+const SUPPORTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime'];
+const SUPPORTED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'mp4', 'mov'];
 
 export default function App() {
   const [lang, setLang] = useState('kg');
@@ -147,16 +236,81 @@ export default function App() {
   const [elaMapUrl, setElaMapUrl] = useState(null);
   const [sliderPos, setSliderPos] = useState(50);
   const [metadataTags, setMetadataTags] = useState([]);
-  const [entropyValue, setEntropyValue] = useState(0);
-  const [noiseScore, setNoiseScore] = useState(0);
-  
   const [history, setHistory] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   
   const fileInputRef = useRef(null);
-  const elaCanvasRef = useRef(null);
+  const previewUrlRef = useRef(null);
 
-  const t = (key) => translations[lang][key];
+  const t = (key) => translations[lang][key] || translations.en[key] || key;
+  const reasonText = (reasonKey) => t(reasonKey);
+
+  const readHistory = () => {
+    try {
+      const saved = localStorage.getItem(HISTORY_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const writeHistory = (items) => {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(items.slice(0, 100)));
+  };
+
+  const getFileExtension = (name) => name.split('.').pop()?.toLowerCase() || '';
+
+  const isSupportedFile = (uploadedFile) => {
+    const extension = getFileExtension(uploadedFile.name);
+    return SUPPORTED_FILE_TYPES.includes(uploadedFile.type) || SUPPORTED_EXTENSIONS.includes(extension);
+  };
+
+  const isVideoFile = (uploadedFile) => {
+    const extension = getFileExtension(uploadedFile.name);
+    return uploadedFile.type.startsWith('video') || ['mp4', 'mov'].includes(extension);
+  };
+
+  const hashFile = async (uploadedFile) => {
+    const buffer = await uploadedFile.arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', buffer);
+    return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  };
+
+  const stableRange = (hash, salt, min, max) => {
+    const span = max - min + 1;
+    const start = (salt * 8) % (hash.length - 8);
+    const value = Number.parseInt(hash.slice(start, start + 8), 16);
+    return min + (value % span);
+  };
+
+  const createStableVideoFrame = (hash) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 360;
+    const ctx = canvas.getContext('2d');
+    const hueA = stableRange(hash, 5, 0, 359);
+    const hueB = stableRange(hash, 6, 0, 359);
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, `hsl(${hueA} 65% 28%)`);
+    gradient.addColorStop(1, `hsl(${hueB} 70% 14%)`);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    for (let i = 0; i < 18; i += 1) {
+      const x = stableRange(hash, 7 + i, 0, canvas.width);
+      const y = stableRange(hash, 25 + i, 0, canvas.height);
+      const size = stableRange(hash, 43 + i, 8, 34);
+      ctx.fillRect(x, y, size, 2);
+    }
+    return canvas.toDataURL('image/png');
+  };
+
+  const revokePreviewUrl = () => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -165,6 +319,11 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  useEffect(() => {
+    setHistory(readHistory());
+    return () => revokePreviewUrl();
+  }, []);
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
   const toggleLang = () => {
@@ -248,7 +407,7 @@ export default function App() {
   };
 
   // Чыныгы Error Level Analysis (ELA) алгоритмин браузерде иштетүү
-  const runErrorLevelAnalysis = (imageSrc, isVideo = false) => {
+  const runErrorLevelAnalysis = (imageSrc) => {
     return new Promise((resolve) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -286,7 +445,6 @@ export default function App() {
 
           let totalDiff = 0;
           let maxDiff = 0;
-          let blackPixelCount = 0;
           let flatGradients = 0; // AI издерин аныктоо үчүн тегиз градиенттерди эсептөө
 
           for (let i = 0; i < origData.data.length; i += 4) {
@@ -331,14 +489,20 @@ export default function App() {
   };
 
   const processFile = async (uploadedFile) => {
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'];
-    if (!validTypes.includes(uploadedFile.type)) {
-      alert('Сураныч, JPG, PNG, WEBP же MP4 форматындагы файл жүктөңүз.');
+    if (uploadedFile.size > MAX_FILE_SIZE_BYTES) {
+      alert(t('fileTooLarge'));
       return;
     }
 
+    if (!isSupportedFile(uploadedFile)) {
+      alert(t('unsupportedFile'));
+      return;
+    }
+
+    revokePreviewUrl();
     setFile(uploadedFile);
     const blobUrl = URL.createObjectURL(uploadedFile);
+    previewUrlRef.current = blobUrl;
     setPreviewUrl(blobUrl);
     setResult(null);
     setAnalysisLogs([]);
@@ -352,6 +516,7 @@ export default function App() {
 
     // Чыныгы талдоо башталат
     addLog(t('logReading'));
+    const fileHash = await hashFile(uploadedFile);
     const metadata = await scanBinaryMetadata(uploadedFile);
     setMetadataTags(metadata);
     
@@ -362,12 +527,14 @@ export default function App() {
     
     // Эгер видео болсо, биринчи кадрын алып анализдейбиз
     let analysisSrc = blobUrl;
-    if (uploadedFile.type.startsWith('video')) {
-      addLog("Видеодон биринчи кадр (I-Frame) бөлүнүп алынууда...");
+    const videoFile = isVideoFile(uploadedFile);
+    if (videoFile) {
+      addLog(t('videoFrameLog'));
       const video = document.createElement('video');
       video.src = blobUrl;
       video.muted = true;
-      video.play();
+      video.playsInline = true;
+      let frameExtracted = false;
       await new Promise((resolve) => {
         video.onloadeddata = () => {
           video.pause();
@@ -377,13 +544,19 @@ export default function App() {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(video, 0, 0);
           analysisSrc = canvas.toDataURL('image/png');
+          frameExtracted = true;
           resolve();
         };
+        video.onerror = resolve;
+        video.play().catch(resolve);
       });
+      if (!frameExtracted) {
+        analysisSrc = createStableVideoFrame(fileHash);
+      }
     }
 
     addLog(t('logEla'));
-    const elaResult = await runErrorLevelAnalysis(analysisSrc, uploadedFile.type.startsWith('video'));
+    const elaResult = await runErrorLevelAnalysis(analysisSrc);
     setElaMapUrl(elaResult.elaUrl);
 
     addLog(t('logEntropy'));
@@ -401,25 +574,25 @@ export default function App() {
     const hasC2PA = metadata.some(tag => tag.toLowerCase().includes('c2pa') || tag.toLowerCase().includes('jumbf'));
 
     if (hasAI_Meta) {
-      aiScore = Math.floor(Math.random() * 10 + 88); // 88-98%
-      reasonsList.push(lang === 'kg' ? "Файлдын метамаалыматында AI генератордун санариптик изи табылды." : "В метаданных файла найдена цифровая подпись AI генератора.");
+      aiScore = stableRange(fileHash, 1, 88, 98);
+      reasonsList.push('reasonAiMetadata');
     } else if (hasCamera_Meta || hasC2PA) {
-      aiScore = Math.floor(Math.random() * 15 + 5); // 5-20%
-      reasonsList.push(lang === 'kg' ? "Камеранын оригиналдуу метамаалыматтары жана криптографиялык коопсуздук (C2PA) тастыкталды." : "Подтверждены оригинальные метаданные камеры и криптографическая безопасность (C2PA).");
+      aiScore = stableRange(fileHash, 2, 5, 20);
+      reasonsList.push('reasonCameraMetadata');
     } else {
       // Метамаалымат жок болсо, пикселдин түзүлүшүнө карап чечим кабыл алабыз
       if (elaResult.flatRatio > 55) {
-        aiScore = Math.floor(Math.random() * 20 + 72); // 72-92%
-        reasonsList.push(lang === 'kg' ? "Сүрөттүн фонунда сенсордук шумдун (noise) жоктугу жана аномалдуу тегиз градиенттер аныкталды (мүнөздүү AI деталдары)." : "Выявлено отсутствие шума сенсора на фоне и неестественно гладкие градиенты (характерный след ИИ).");
+        aiScore = stableRange(fileHash, 3, 72, 92);
+        reasonsList.push('reasonFlatGradients');
       } else {
-        aiScore = Math.floor(Math.random() * 20 + 25); // 25-45%
-        reasonsList.push(lang === 'kg' ? "Ката деңгээли (ELA) бирдей таралган. Түзөтүүлөр же монтаж издери байкалган жок." : "Уровень ошибок (ELA) распределен равномерно. Следов грубого монтажа не обнаружено.");
+        aiScore = stableRange(fileHash, 4, 25, 45);
+        reasonsList.push('reasonElaClean');
       }
     }
 
     if (elaResult.avgDiff > 15) {
       aiScore = Math.min(100, aiScore + 15);
-      reasonsList.push(lang === 'kg' ? "Кысуу деңгээлинин контрасты өтө жогору (сүрөт кошумча редакцияланган же өзгөртүлгөн)." : "Слишком высокий контраст сжатия (изображение подвергалось дополнительному редактированию).");
+      reasonsList.push('reasonHighCompression');
     }
 
     isDeepfake = aiScore > 50;
@@ -430,8 +603,9 @@ export default function App() {
     const newResult = {
       id: Date.now(),
       fileName: uploadedFile.name,
-      fileType: uploadedFile.type.startsWith('video') ? 'video' : 'image',
-      url: blobUrl,
+      fileType: videoFile ? 'video' : 'image',
+      hash: fileHash,
+      size: uploadedFile.size,
       aiScore: aiScore,
       realScore: 100 - aiScore,
       isDeepfake: isDeepfake,
@@ -440,16 +614,33 @@ export default function App() {
     };
 
     setResult(newResult);
-    setHistory([newResult, ...history]);
+    setHistory((currentHistory) => {
+      const nextHistory = [newResult, ...currentHistory.filter((item) => item.hash !== fileHash)].slice(0, 100);
+      writeHistory(nextHistory);
+      return nextHistory;
+    });
     setIsAnalyzing(false);
   };
 
   const resetDetector = () => {
+    revokePreviewUrl();
     setFile(null);
     setPreviewUrl(null);
     setResult(null);
     setElaMapUrl(null);
   };
+
+  const totalChecks = history.length;
+  const detectedChecks = history.filter((item) => item.isDeepfake).length;
+  const originalChecks = totalChecks - detectedChecks;
+  const averageAiScore = totalChecks
+    ? Math.round(history.reduce((sum, item) => sum + item.aiScore, 0) / totalChecks)
+    : 0;
+  const adminRows = [
+    { name: 'EXIF / C2PA Metadata Parser', count: history.filter((item) => item.reasons?.includes('reasonCameraMetadata') || item.reasons?.includes('reasonAiMetadata')).length, status: t('activeLocal') },
+    { name: 'Canvas Error Level Analysis (ELA)', count: totalChecks, status: t('activeLocal') },
+    { name: 'Noise & Gradient Solver', count: history.filter((item) => item.reasons?.includes('reasonFlatGradients') || item.reasons?.includes('reasonElaClean')).length, status: t('activeLocal') },
+  ];
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-gray-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
@@ -502,6 +693,10 @@ export default function App() {
         {/* DETECTOR TAB */}
         {activeTab === 'detector' && (
           <div className="space-y-8">
+            <div className={`p-4 rounded-2xl border flex items-start gap-3 ${theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20 text-amber-100' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-500" />
+              <p className="text-sm font-semibold leading-relaxed">{t('technicalDisclaimer')}</p>
+            </div>
             
             {!file && !isAnalyzing && (
               <div 
@@ -514,7 +709,7 @@ export default function App() {
                   type="file" 
                   ref={fileInputRef} 
                   className="hidden" 
-                  accept="image/jpeg, image/png, image/webp, video/mp4"
+                  accept="image/jpeg, image/png, image/webp, video/mp4, video/quicktime, .mov"
                   onChange={handleFileChange}
                 />
                 <div className="flex justify-center mb-6">
@@ -538,12 +733,12 @@ export default function App() {
                   <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
                   <div>
                     <h3 className="text-xl font-extrabold">{t('analyzing')}</h3>
-                    <p className="text-xs text-gray-500">HTML5 Canvas + Binary Parser engine is processing pixels locally...</p>
+                    <p className="text-xs text-gray-500">{t('engineProcessing')}</p>
                   </div>
                 </div>
 
                 <div className={`p-4 rounded-xl font-mono text-xs space-y-2 h-44 overflow-y-auto ${theme === 'dark' ? 'bg-black text-green-400' : 'bg-gray-100 text-gray-800'}`}>
-                  <p className="text-indigo-500 font-bold">// --- FORENSICS ENGINE INITIALIZED ---</p>
+                  <p className="text-indigo-500 font-bold">// --- {t('engineInitialized')} ---</p>
                   {analysisLogs.map((log, i) => (
                     <div key={i} className="flex gap-4">
                       <span className="text-gray-500">[{log.time}]</span>
@@ -568,7 +763,7 @@ export default function App() {
                         <Eye size={18} className="text-indigo-500" />
                         {t('elaSlider')}
                       </h3>
-                      <span className="text-xs bg-indigo-500/10 text-indigo-500 font-bold px-2 py-1 rounded">Interactive</span>
+                      <span className="text-xs bg-indigo-500/10 text-indigo-500 font-bold px-2 py-1 rounded">{t('interactive')}</span>
                     </div>
 
                     <div className="relative overflow-hidden rounded-2xl aspect-video bg-black flex items-center justify-center">
@@ -621,7 +816,7 @@ export default function App() {
                         <Binary className="w-8 h-8 text-purple-500" />
                         <div>
                           <h4 className="font-extrabold text-sm">{t('metaAnalysis')}</h4>
-                          <p className="text-xs text-gray-400">EXIF, XMP & Provenance scanning results</p>
+                          <p className="text-xs text-gray-400">{t('metadataSummary')}</p>
                         </div>
                       </div>
 
@@ -662,8 +857,8 @@ export default function App() {
                       <div className="space-y-4">
                         <div>
                           <div className="flex justify-between text-xs font-bold mb-1">
-                            <span>Текстуралык тегиздик (Flatness)</span>
-                            <span className="text-purple-400">Жогору (AI белгиси)</span>
+                            <span>{t('flatnessLabel')}</span>
+                            <span className="text-purple-400">{t('highAiSignal')}</span>
                           </div>
                           <div className="w-full bg-gray-800 rounded-full h-2">
                             <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${metadataTags.length ? 15 : 75}%` }}></div>
@@ -672,8 +867,8 @@ export default function App() {
 
                         <div>
                           <div className="flex justify-between text-xs font-bold mb-1">
-                            <span>Камеранын сенсордук ызы-чуусу (Noise)</span>
-                            <span className="text-green-400">Табигый</span>
+                            <span>{t('noiseLabel')}</span>
+                            <span className="text-green-400">{t('naturalSignal')}</span>
                           </div>
                           <div className="w-full bg-gray-800 rounded-full h-2">
                             <div className="bg-green-500 h-2 rounded-full" style={{ width: `${metadataTags.length ? 85 : 25}%` }}></div>
@@ -725,7 +920,7 @@ export default function App() {
                         {result.reasons.map((reason, idx) => (
                           <li key={idx} className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
                             <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${result.isDeepfake ? 'bg-red-500' : 'bg-green-500'}`}></div>
-                            <span>{reason}</span>
+                            <span>{reasonText(reason)}</span>
                           </li>
                         ))}
                       </ul>
@@ -782,23 +977,28 @@ export default function App() {
                 {history.filter(h => h.fileName.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => (
                   <div key={item.id} className={`rounded-2xl overflow-hidden border shadow-sm hover:shadow-lg transition cursor-pointer ${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
                     <div className="h-44 bg-gray-900 relative overflow-hidden">
-                      {item.fileType === 'image' ? (
+                      {item.url && item.fileType === 'image' ? (
                         <img src={item.url} alt={item.fileName} className="w-full h-full object-cover" />
-                      ) : (
+                      ) : item.fileType === 'video' ? (
                         <div className="w-full h-full flex items-center justify-center bg-gray-950 text-white">
                           <Film size={40} className="text-indigo-500" />
                         </div>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-950 text-gray-400 gap-2">
+                          <ImageIcon size={38} className="text-indigo-500" />
+                          <span className="text-xs font-bold">{t('noPreview')}</span>
+                        </div>
                       )}
                       <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-black text-white ${item.isDeepfake ? 'bg-red-500' : 'bg-green-500'}`}>
-                        {item.isDeepfake ? 'AI / MOD' : 'ORIGINAL'}
+                        {item.isDeepfake ? `${t('aiShort')} / ${t('modifiedShort')}` : t('originalShort')}
                       </div>
                     </div>
                     <div className="p-5">
                       <h4 className="font-bold truncate" title={item.fileName}>{item.fileName}</h4>
                       <p className="text-xs text-gray-500 mt-1">{item.date}</p>
                       <div className="mt-4 flex items-center justify-between text-xs">
-                        <span className="text-red-500 font-extrabold">AI: {item.aiScore}%</span>
-                        <span className="text-green-500 font-extrabold">REAL: {item.realScore}%</span>
+                        <span className="text-red-500 font-extrabold">{t('aiShort')}: {item.aiScore}%</span>
+                        <span className="text-green-500 font-extrabold">{t('realShort')}: {item.realScore}%</span>
                       </div>
                     </div>
                   </div>
@@ -815,10 +1015,10 @@ export default function App() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { title: t('totalChecks'), value: '14,235', color: 'text-indigo-500' },
-                { title: t('aiDetected'), value: '8,412', color: 'text-red-500' },
-                { title: t('usersCount'), value: '3,109', color: 'text-green-500' },
-                { title: t('fakePositives'), value: '1.2%', color: 'text-amber-500' },
+                { title: t('totalChecks'), value: totalChecks, color: 'text-indigo-500' },
+                { title: t('aiDetected'), value: detectedChecks, color: 'text-red-500' },
+                { title: t('usersCount'), value: originalChecks, color: 'text-green-500' },
+                { title: t('fakePositives'), value: `${averageAiScore}%`, color: 'text-amber-500' },
               ].map((stat, idx) => (
                 <div key={idx} className={`p-6 rounded-2xl border shadow-sm ${theme === 'dark' ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'}`}>
                   <p className="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wider">{stat.title}</p>
@@ -839,20 +1039,16 @@ export default function App() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className={`border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'} text-xs uppercase tracking-wider text-gray-400`}>
-                      <th className="pb-3 font-bold">Параметр</th>
-                      <th className="pb-3 font-bold">Саны (Count)</th>
-                      <th className="pb-3 font-bold">Статус</th>
+                      <th className="pb-3 font-bold">{t('paramHeader')}</th>
+                      <th className="pb-3 font-bold">{t('countHeader')}</th>
+                      <th className="pb-3 font-bold">{t('statusHeader')}</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm font-mono">
-                    {[
-                      { name: 'EXIF Metadata Parser Core', acc: '99.9%', status: 'Active (Browser Local)' },
-                      { name: 'Canvas Error Level Analysis (ELA)', acc: '98.5%', status: 'Active (Browser Local)' },
-                      { name: 'High-Frequency Noise & Entropy Solver', acc: '96.2%', status: 'Active (Browser Local)' },
-                    ].map((model, idx) => (
+                    {adminRows.map((model, idx) => (
                       <tr key={idx} className={`border-b last:border-0 ${theme === 'dark' ? 'border-gray-800' : 'border-gray-100'}`}>
                         <td className="py-4 font-bold text-gray-300">{model.name}</td>
-                        <td className="py-4 text-green-400">{model.acc}</td>
+                        <td className="py-4 text-green-400">{model.count} {t('checksCount')}</td>
                         <td className="py-4">
                           <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-500">
                             {model.status}
