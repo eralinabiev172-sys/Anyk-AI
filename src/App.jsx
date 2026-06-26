@@ -47,6 +47,10 @@ const translations = {
     logEla: "JPEG ре-компрессиялык айырмасын эсептөө...",
     logEntropy: "Пикселдик энтропияны жана градиенттерди анализдөө...",
     logDone: "Анализ ийгиликтүү аяктады!",
+    logApiChecking: "Тышкы AI detector API аркылуу текшерүү...",
+    logApiFallback: "API жеткиликсиз, локалдык анализ колдонулууда...",
+    apiSource: "API-анализ",
+    localSource: "Локалдык анализ",
     fileTooLarge: "Файлдын көлөмү 50 MBдан ашпашы керек.",
     unsupportedFile: "JPG, PNG, WEBP, MP4 же MOV форматындагы файл жүктөңүз.",
     videoFrameLog: "Видеодон биринчи кадр бөлүнүп алынууда...",
@@ -116,6 +120,10 @@ const translations = {
     logEla: "Расчет разницы JPEG ре-компрессии...",
     logEntropy: "Анализ пиксельной энтропии и градиентов...",
     logDone: "Анализ успешно завершен!",
+    logApiChecking: "Проверка через внешний AI detector API...",
+    logApiFallback: "API недоступен, используется локальный анализ...",
+    apiSource: "API-анализ",
+    localSource: "Локальный анализ",
     fileTooLarge: "Размер файла не должен превышать 50 MB.",
     unsupportedFile: "Загрузите файл в формате JPG, PNG, WEBP, MP4 или MOV.",
     videoFrameLog: "Из видео извлекается первый кадр...",
@@ -185,6 +193,10 @@ const translations = {
     logEla: "Calculating JPEG re-compression error...",
     logEntropy: "Analyzing pixel entropy and local gradients...",
     logDone: "Analysis completed successfully!",
+    logApiChecking: "Checking with the external AI detector API...",
+    logApiFallback: "API is unavailable, using local analysis...",
+    apiSource: "API analysis",
+    localSource: "Local analysis",
     fileTooLarge: "File size must not exceed 50 MB.",
     unsupportedFile: "Please upload a JPG, PNG, WEBP, MP4, or MOV file.",
     videoFrameLog: "Extracting the first frame from the video...",
@@ -243,7 +255,7 @@ export default function App() {
   const previewUrlRef = useRef(null);
 
   const t = (key) => translations[lang][key] || translations.en[key] || key;
-  const reasonText = (reasonKey) => t(reasonKey);
+  const reasonText = (reasonKey) => translations[lang][reasonKey] || translations.en[reasonKey] || reasonKey;
 
   const readHistory = () => {
     try {
@@ -310,6 +322,36 @@ export default function App() {
       URL.revokeObjectURL(previewUrlRef.current);
       previewUrlRef.current = null;
     }
+  };
+
+  const analyzeWithApi = async (uploadedFile) => {
+    const formData = new FormData();
+    formData.append('file', uploadedFile);
+
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.message || payload.error || 'AI detector API request failed.');
+    }
+
+    const aiScore = Number(payload.aiScore);
+    if (!Number.isFinite(aiScore)) {
+      throw new Error('AI detector API returned an invalid score.');
+    }
+
+    return {
+      aiScore: Math.max(0, Math.min(100, Math.round(aiScore))),
+      realScore: Math.max(0, Math.min(100, Math.round(Number(payload.realScore ?? 100 - aiScore)))),
+      isDeepfake: typeof payload.isDeepfake === 'boolean' ? payload.isDeepfake : aiScore > 50,
+      source: payload.source === 'api' ? 'api' : 'local',
+      reasons: Array.isArray(payload.reasons) && payload.reasons.length > 0
+        ? payload.reasons.map(String)
+        : ['External AI detector API returned a score.'],
+    };
   };
 
   useEffect(() => {
@@ -514,9 +556,45 @@ export default function App() {
       setAnalysisLogs([...logs]);
     };
 
+    const fileHash = await hashFile(uploadedFile);
+    const videoFile = isVideoFile(uploadedFile);
+
+    if (!videoFile) {
+      addLog(t('logApiChecking'));
+      try {
+        const apiResult = await analyzeWithApi(uploadedFile);
+        const newResult = {
+          id: Date.now(),
+          fileName: uploadedFile.name,
+          fileType: 'image',
+          hash: fileHash,
+          size: uploadedFile.size,
+          aiScore: apiResult.aiScore,
+          realScore: apiResult.realScore,
+          isDeepfake: apiResult.isDeepfake,
+          source: 'api',
+          date: new Date().toLocaleString(),
+          reasons: apiResult.reasons,
+        };
+
+        setMetadataTags([]);
+        setElaMapUrl(null);
+        addLog(t('logDone'));
+        setResult(newResult);
+        setHistory((currentHistory) => {
+          const nextHistory = [newResult, ...currentHistory.filter((item) => item.hash !== fileHash)].slice(0, 100);
+          writeHistory(nextHistory);
+          return nextHistory;
+        });
+        setIsAnalyzing(false);
+        return;
+      } catch {
+        addLog(t('logApiFallback'));
+      }
+    }
+
     // Чыныгы талдоо башталат
     addLog(t('logReading'));
-    const fileHash = await hashFile(uploadedFile);
     const metadata = await scanBinaryMetadata(uploadedFile);
     setMetadataTags(metadata);
     
@@ -527,7 +605,6 @@ export default function App() {
     
     // Эгер видео болсо, биринчи кадрын алып анализдейбиз
     let analysisSrc = blobUrl;
-    const videoFile = isVideoFile(uploadedFile);
     if (videoFile) {
       addLog(t('videoFrameLog'));
       const video = document.createElement('video');
@@ -609,6 +686,7 @@ export default function App() {
       aiScore: aiScore,
       realScore: 100 - aiScore,
       isDeepfake: isDeepfake,
+      source: 'local',
       date: new Date().toLocaleString(),
       reasons: reasonsList
     };
@@ -886,6 +964,11 @@ export default function App() {
                   
                   {/* Verdict Card */}
                   <div className={`p-6 rounded-3xl border shadow-xl flex flex-col justify-center ${theme === 'dark' ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'}`}>
+                    <div className="mb-3 flex justify-end">
+                      <span className={`text-xs font-black px-3 py-1.5 rounded-full ${result.source === 'api' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'bg-gray-500/10 text-gray-500 border border-gray-500/20'}`}>
+                        {result.source === 'api' ? t('apiSource') : t('localSource')}
+                      </span>
+                    </div>
                     
                     <div className={`mb-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-black text-sm justify-center ${result.isDeepfake ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'}`}>
                       {result.isDeepfake ? <AlertTriangle size={20} /> : <CheckCircle size={20} />}
@@ -996,6 +1079,9 @@ export default function App() {
                     <div className="p-5">
                       <h4 className="font-bold truncate" title={item.fileName}>{item.fileName}</h4>
                       <p className="text-xs text-gray-500 mt-1">{item.date}</p>
+                      <p className="text-xs text-indigo-500 font-black mt-2">
+                        {item.source === 'api' ? t('apiSource') : t('localSource')}
+                      </p>
                       <div className="mt-4 flex items-center justify-between text-xs">
                         <span className="text-red-500 font-extrabold">{t('aiShort')}: {item.aiScore}%</span>
                         <span className="text-green-500 font-extrabold">{t('realShort')}: {item.realScore}%</span>
